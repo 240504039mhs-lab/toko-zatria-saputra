@@ -1,0 +1,969 @@
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zatria - Toko Online</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    .product-card {
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .product-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .category-button {
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    #cart-modal {
+      transition: opacity 0.2s;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- NAVBAR -->
+  <header class="bg-white sticky top-0 z-20 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+
+      <a href="#" class="flex items-center gap-2">
+        <span class="bg-orange-500 text-white w-9 h-9 rounded-full flex items-center justify-center text-xl">
+          🛍️
+        </span>
+
+        <h1 class="text-xl font-bold text-orange-600">
+          Zatria
+        </h1>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-6 text-sm text-slate-600">
+        <a href="#produk" class="hover:text-orange-500">Produk</a>
+        <a href="#kategori" class="hover:text-orange-500">Kategori</a>
+        <a href="#tentang" class="hover:text-orange-500">Tentang</a>
+        <a href="#kontak" class="hover:text-orange-500">Kontak</a>
+      </nav>
+
+      <button
+        onclick="toggleCart()"
+        class="relative p-2.5 bg-orange-50 text-orange-600 rounded-full hover:bg-orange-100"
+        aria-label="Buka keranjang">
+
+        🛒
+
+        <span id="cart-count"
+          class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+          0
+        </span>
+      </button>
+
+    </div>
+  </header>
+
+
+  <!-- KONTEN UTAMA -->
+  <main class="max-w-6xl mx-auto px-4 py-6 flex-1 w-full">
+
+    <!-- BANNER -->
+    <section id="tentang" class="bg-white rounded-2xl p-6 md:p-8 mb-5 shadow-sm">
+
+      <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900">
+        Selamat Datang di Zatria
+      </h2>
+
+      <p class="text-sm text-slate-500 mt-2 max-w-xl">
+        Temukan produk pilihan dengan mudah, harga menarik, dan pemesanan praktis melalui WhatsApp.
+      </p>
+
+    </section>
+
+
+    <!-- KATEGORI -->
+    <section id="kategori" class="bg-white rounded-2xl p-5 mb-5 shadow-sm">
+
+      <div class="flex justify-between items-center mb-1">
+
+        <div>
+          <h2 class="font-bold text-lg text-slate-900">
+            Kategori Produk
+          </h2>
+
+          <p class="text-xs text-slate-500">
+            Temukan produk yang kamu cari
+          </p>
+        </div>
+
+        <span class="text-sm text-slate-500">
+          ☰ Filter
+        </span>
+
+      </div>
+
+      <div id="category-list"
+        class="flex gap-2 overflow-x-auto py-3">
+
+        <button
+          onclick="filterCategory('Semua')"
+          class="category-button px-3 py-2 rounded-full text-xs bg-orange-500 text-white">
+          Semua Produk
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- PENCARIAN DAN PENGURUTAN -->
+    <section id="produk" class="mb-5 flex flex-col sm:flex-row gap-3 justify-between">
+
+      <input
+        id="search-product"
+        type="search"
+        placeholder="🔎 Cari produk..."
+        class="w-full sm:max-w-sm bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-orange-300"
+        oninput="applyFilters()">
+
+      <select
+        id="sort-product"
+        onchange="applyFilters()"
+        class="bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
+
+        <option value="default">Urutkan Produk</option>
+        <option value="cheap">Harga Termurah</option>
+        <option value="expensive">Harga Termahal</option>
+        <option value="name">Nama A-Z</option>
+
+      </select>
+
+    </section>
+
+
+    <!-- LOADING -->
+    <div id="product-loading"
+      class="text-center py-16 text-slate-500 bg-white rounded-2xl">
+
+      <div class="inline-block animate-spin text-3xl mb-3">
+        ⏳
+      </div>
+
+      <p class="font-medium">
+        Memuat katalog produk dari Google Sheets...
+      </p>
+
+    </div>
+
+
+    <!-- GRID PRODUK -->
+    <div id="product-grid"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 hidden">
+    </div>
+
+
+    <!-- JIKA PRODUK KOSONG -->
+    <div id="empty-products"
+      class="hidden text-center py-12 text-slate-500 bg-white rounded-2xl">
+
+      Produk tidak ditemukan.
+
+    </div>
+
+  </main>
+
+
+  <!-- FOOTER -->
+  <footer id="kontak"
+    class="bg-white border-t py-6 text-center text-xs text-slate-500 mt-6">
+
+    <p>© 2026 Zatria. All rights reserved.</p>
+
+    <p class="mt-1">
+      Terima kasih telah berbelanja di Zatria ❤️
+    </p>
+
+  </footer>
+
+
+  <!-- MODAL KERANJANG -->
+  <div id="cart-modal"
+    class="fixed inset-0 bg-black/50 z-30 hidden justify-end">
+
+    <div class="bg-white w-full max-w-md h-full flex flex-col p-6 shadow-2xl overflow-y-auto">
+
+      <div class="flex justify-between items-center pb-4 border-b">
+
+        <h4 class="text-lg font-bold text-slate-900">
+          Keranjang Belanja
+        </h4>
+
+        <button
+          onclick="toggleCart()"
+          class="text-slate-400 hover:text-slate-700 text-2xl font-bold"
+          aria-label="Tutup keranjang">
+
+          &times;
+
+        </button>
+
+      </div>
+
+
+      <!-- ITEM KERANJANG -->
+      <div id="cart-items"
+        class="flex-1 py-4 space-y-3 overflow-y-auto">
+      </div>
+
+
+      <!-- CHECKOUT -->
+      <div class="border-t pt-4 space-y-4">
+
+        <div class="flex justify-between text-lg font-bold text-slate-900">
+
+          <span>Total Pembayaran:</span>
+
+          <span id="cart-total" class="text-orange-600">
+            Rp 0
+          </span>
+
+        </div>
+
+
+        <form id="checkout-form"
+          onsubmit="handleCheckout(event)"
+          class="space-y-3">
+
+          <div>
+
+            <label for="cust-name"
+              class="block text-xs font-semibold text-slate-600 mb-1">
+
+              Nama Lengkap Pembeli
+
+            </label>
+
+            <input
+              type="text"
+              id="cust-name"
+              required
+              class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-400 outline-none"
+              placeholder="Contoh: Budi Santoso">
+
+          </div>
+
+
+          <div>
+
+            <label for="cust-phone"
+              class="block text-xs font-semibold text-slate-600 mb-1">
+
+              Nomor WhatsApp Aktif
+
+            </label>
+
+            <input
+              type="tel"
+              id="cust-phone"
+              required
+              class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-400 outline-none"
+              placeholder="Contoh: 081234567890">
+
+          </div>
+
+
+          <div>
+
+            <label for="cust-address"
+              class="block text-xs font-semibold text-slate-600 mb-1">
+
+              Alamat Lengkap Pengiriman
+
+            </label>
+
+            <textarea
+              id="cust-address"
+              required
+              class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-400 outline-none"
+              rows="2"
+              placeholder="Jalan, nomor rumah, kelurahan, kecamatan, kota"></textarea>
+
+          </div>
+
+
+          <button
+            type="submit"
+            id="btn-submit"
+            class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700 transition shadow-md">
+
+            Beli Sekarang via WhatsApp 📲
+
+          </button>
+
+        </form>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- LOGIKA JAVASCRIPT -->
+  <script>
+
+    // URL GOOGLE APPS SCRIPT TOKO ZATRIA
+    const API_URL = "https://script.google.com/macros/s/AKfycbziothSrGzNWIkC19Rmu2WDSeNGbRHXtlbnrn2isF392RdPjIW2tZbpGsteRIKSMF6E-g/exec";
+
+    // NOMOR WHATSAPP ADMIN TOKO ZATRIA
+    const WA_ADMIN = "6283873099640";
+
+
+    let products = [];
+    let cart = [];
+    let activeCategory = "Semua";
+
+
+    // MEMUAT PRODUK DARI GOOGLE SHEETS
+    async function loadProducts() {
+
+      const loading = document.getElementById("product-loading");
+
+      try {
+
+        const response = await fetch(API_URL);
+
+        if (!response.ok) {
+          throw new Error("Gagal mengambil data produk.");
+        }
+
+        const json = await response.json();
+
+        if (!Array.isArray(json.data)) {
+          throw new Error("Format data produk tidak sesuai.");
+        }
+
+        products = json.data;
+
+        renderCategories();
+        applyFilters();
+
+      } catch (error) {
+
+        console.error("Kesalahan memuat produk:", error);
+
+        loading.innerHTML = `
+          <p class="text-red-500 font-semibold">
+            Gagal memuat produk dari database.
+          </p>
+          <p class="text-xs mt-2">
+            Periksa URL Google Apps Script dan format respons API.
+          </p>
+        `;
+
+      }
+
+    }
+
+
+    // MENGAMANKAN TEKS YANG DITAMPILKAN
+    function escapeHTML(value) {
+
+      return String(value ?? "").replace(/[&<>"']/g, character => ({
+
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+
+      })[character]);
+
+    }
+
+
+    // MEMBUAT KATEGORI OTOMATIS
+    function renderCategories() {
+
+      const container = document.getElementById("category-list");
+
+      const categories = [
+        "Semua",
+        ...new Set(
+          products.map(product =>
+            String(product.kategori || "Umum").trim()
+          )
+        )
+      ];
+
+      container.innerHTML = categories.map(category => `
+
+        <button
+          onclick="filterCategory(${JSON.stringify(category).replace(/</g, '\\u003c')})"
+          class="category-button px-3 py-2 rounded-full text-xs
+          ${activeCategory === category
+            ? "bg-orange-500 text-white"
+            : "bg-slate-100 text-slate-600 hover:bg-orange-100"}">
+
+          ${escapeHTML(
+            category === "Semua" ? "Semua Produk" : category
+          )}
+
+        </button>
+
+      `).join("");
+
+    }
+
+
+    // FILTER KATEGORI
+    function filterCategory(category) {
+
+      activeCategory = category;
+
+      renderCategories();
+      applyFilters();
+
+    }
+
+
+    // PENCARIAN DAN PENGURUTAN PRODUK
+    function applyFilters() {
+
+      const keyword = document
+        .getElementById("search-product")
+        .value.trim()
+        .toLowerCase();
+
+      const sort = document
+        .getElementById("sort-product")
+        .value;
+
+      let filteredProducts = products.filter(product => {
+
+        const name = String(product.nama || "").toLowerCase();
+
+        const description = String(
+          product.deskripsi || ""
+        ).toLowerCase();
+
+        const category = String(product.kategori || "Umum");
+
+        const matchSearch =
+          name.includes(keyword) ||
+          description.includes(keyword);
+
+        const matchCategory =
+          activeCategory === "Semua" ||
+          category === activeCategory;
+
+        return matchSearch && matchCategory;
+
+      });
+
+
+      if (sort === "cheap") {
+
+        filteredProducts.sort(
+          (a, b) => Number(a.harga || 0) - Number(b.harga || 0)
+        );
+
+      } else if (sort === "expensive") {
+
+        filteredProducts.sort(
+          (a, b) => Number(b.harga || 0) - Number(a.harga || 0)
+        );
+
+      } else if (sort === "name") {
+
+        filteredProducts.sort(
+          (a, b) => String(a.nama || "").localeCompare(
+            String(b.nama || ""),
+            "id"
+          )
+        );
+
+      }
+
+      renderProducts(filteredProducts);
+
+    }
+
+
+    // MENAMPILKAN PRODUK
+    function renderProducts(list) {
+
+      const grid = document.getElementById("product-grid");
+
+      const empty = document.getElementById("empty-products");
+
+      grid.innerHTML = "";
+
+      list.forEach(product => {
+
+        const image = escapeHTML(
+          product.foto ||
+          "https://via.placeholder.com/300?text=Foto+Produk"
+        );
+
+        const name = escapeHTML(product.nama || "Produk");
+
+        const category = escapeHTML(product.kategori || "Umum");
+
+        const description = escapeHTML(product.deskripsi || "");
+
+        const price = Number(product.harga || 0);
+
+        const stock = Number(product.stok || 0);
+
+        const productId = JSON.stringify(product.id);
+
+        grid.innerHTML += `
+
+          <article class="product-card bg-white border border-slate-100
+            rounded-xl overflow-hidden shadow-sm flex flex-col">
+
+            <img
+              src="${image}"
+              alt="${name}"
+              loading="lazy"
+              class="h-44 w-full object-cover bg-slate-100"
+              onerror="this.onerror=null;this.src='https://via.placeholder.com/300?text=Foto+Produk'">
+
+            <div class="p-4 flex-1 flex flex-col justify-between">
+
+              <div>
+
+                <span class="text-xs font-medium bg-orange-50
+                  text-orange-600 px-2.5 py-1 rounded-full">
+
+                  ${category}
+
+                </span>
+
+                <h3 class="font-bold text-slate-900 text-sm mt-3">
+
+                  ${name}
+
+                </h3>
+
+                <p class="text-xs text-slate-500 mt-1">
+
+                  ${description}
+
+                </p>
+
+                <p class="text-xs text-slate-400 mt-2">
+
+                  Sisa stok:
+                  <strong class="text-slate-600">${stock}</strong>
+
+                </p>
+
+              </div>
+
+
+              <div class="mt-4 pt-3 border-t flex items-center
+                justify-between gap-2">
+
+                <span class="font-extrabold text-slate-900 text-base">
+
+                  Rp ${price.toLocaleString("id-ID")}
+
+                </span>
+
+                <button
+                  onclick='addToCart(${productId})'
+                  ${stock <= 0 ? "disabled" : ""}
+                  class="bg-orange-500 text-white text-xs font-bold
+                    px-3 py-2 rounded-lg hover:bg-orange-600
+                    transition disabled:bg-slate-300">
+
+                  ${stock <= 0 ? "Stok Habis" : "+ Keranjang"}
+
+                </button>
+
+              </div>
+
+            </div>
+
+          </article>
+
+        `;
+
+      });
+
+
+      document.getElementById("product-loading").classList.add("hidden");
+
+      grid.classList.remove("hidden");
+
+      empty.classList.toggle("hidden", list.length !== 0);
+
+    }
+
+
+    // MENAMBAHKAN PRODUK KE KERANJANG
+    function addToCart(id) {
+
+      const product = products.find(
+        item => String(item.id) === String(id)
+      );
+
+      if (!product) {
+
+        alert("Produk tidak ditemukan.");
+
+        return;
+
+      }
+
+      const stock = Number(product.stok || 0);
+
+      const existing = cart.find(
+        item => String(item.id) === String(id)
+      );
+
+      const quantity = existing ? existing.qty : 0;
+
+      if (quantity >= stock) {
+
+        alert("Jumlah produk melebihi stok yang tersedia.");
+
+        return;
+
+      }
+
+      if (existing) {
+
+        existing.qty += 1;
+
+      } else {
+
+        cart.push({
+          ...product,
+          qty: 1
+        });
+
+      }
+
+      updateCartUI();
+
+    }
+
+
+    // MEMPERBARUI TAMPILAN KERANJANG
+    function updateCartUI() {
+
+      document.getElementById("cart-count").innerText =
+        cart.reduce((total, item) => total + item.qty, 0);
+
+      const container = document.getElementById("cart-items");
+
+      container.innerHTML = "";
+
+      let total = 0;
+
+
+      if (cart.length === 0) {
+
+        container.innerHTML = `
+
+          <p class="text-center text-sm text-slate-400 py-8">
+
+            Keranjang belanja masih kosong.
+
+          </p>
+
+        `;
+
+      }
+
+
+      cart.forEach((item, index) => {
+
+        total += Number(item.harga || 0) * item.qty;
+
+        container.innerHTML += `
+
+          <div class="flex justify-between items-center bg-slate-50
+            p-3 rounded-xl text-sm border gap-3">
+
+            <div>
+
+              <p class="font-semibold text-slate-800">
+
+                ${escapeHTML(item.nama)}
+
+              </p>
+
+              <p class="text-xs text-slate-500">
+
+                Rp ${Number(item.harga || 0).toLocaleString("id-ID")}
+                × ${item.qty}
+
+              </p>
+
+            </div>
+
+            <div class="flex items-center gap-2">
+
+              <button
+                onclick="changeQty(${index}, -1)"
+                class="w-7 h-7 rounded bg-white border">
+
+                −
+
+              </button>
+
+              <span>${item.qty}</span>
+
+              <button
+                onclick="changeQty(${index}, 1)"
+                class="w-7 h-7 rounded bg-white border">
+
+                +
+
+              </button>
+
+              <button
+                onclick="removeFromCart(${index})"
+                class="text-red-500 text-xs font-bold">
+
+                Hapus
+
+              </button>
+
+            </div>
+
+          </div>
+
+        `;
+
+      });
+
+
+      document.getElementById("cart-total").innerText =
+        "Rp " + total.toLocaleString("id-ID");
+
+    }
+
+
+    // MENGUBAH JUMLAH PRODUK
+    function changeQty(index, change) {
+
+      const item = cart[index];
+
+      if (!item) return;
+
+      const newQuantity = item.qty + change;
+
+      if (newQuantity < 1) {
+
+        removeFromCart(index);
+
+        return;
+
+      }
+
+      if (newQuantity > Number(item.stok || 0)) {
+
+        alert("Jumlah melebihi stok yang tersedia.");
+
+        return;
+
+      }
+
+      item.qty = newQuantity;
+
+      updateCartUI();
+
+    }
+
+
+    // MENGHAPUS PRODUK DARI KERANJANG
+    function removeFromCart(index) {
+
+      cart.splice(index, 1);
+
+      updateCartUI();
+
+    }
+
+
+    // MEMBUKA DAN MENUTUP KERANJANG
+    function toggleCart() {
+
+      const modal = document.getElementById("cart-modal");
+
+      modal.classList.toggle("hidden");
+
+      modal.classList.toggle("flex");
+
+    }
+
+
+    // CHECKOUT DAN PEMESANAN WHATSAPP
+    async function handleCheckout(event) {
+
+      event.preventDefault();
+
+      if (cart.length === 0) {
+
+        alert("Keranjang belanja Anda masih kosong!");
+
+        return;
+
+      }
+
+      const button = document.getElementById("btn-submit");
+
+      button.innerText = "Memproses Pesanan...";
+
+      button.disabled = true;
+
+
+      const invoiceCode =
+        "INV-" + Date.now().toString().slice(-6);
+
+
+      const payload = {
+
+        nama: document.getElementById("cust-name").value.trim(),
+
+        whatsapp: document.getElementById("cust-phone").value.trim(),
+
+        alamat: document.getElementById("cust-address").value.trim(),
+
+        items: cart.map(item => ({ ...item })),
+
+        total: cart.reduce(
+          (total, item) =>
+            total + Number(item.harga || 0) * item.qty,
+          0
+        )
+
+      };
+
+
+      let textWA = `Halo Admin Zatria, saya ingin konfirmasi pesanan:\n\n`;
+
+      textWA += `🧾 *Invoice: ${invoiceCode}*\n`;
+
+      textWA += `👤 *Nama:* ${payload.nama}\n`;
+
+      textWA += `📱 *No. WA:* ${payload.whatsapp}\n`;
+
+      textWA += `📍 *Alamat:* ${payload.alamat}\n\n`;
+
+      textWA += `🛍️ *Daftar Belanja:*\n`;
+
+
+      payload.items.forEach(item => {
+
+        textWA +=
+          `• ${item.nama} (${item.qty}x) = Rp ${
+            (Number(item.harga || 0) * item.qty)
+              .toLocaleString("id-ID")
+          }\n`;
+
+      });
+
+
+      textWA +=
+        `\n💰 *Total Pembayaran: Rp ${
+          payload.total.toLocaleString("id-ID")
+        }*\n\n`;
+
+      textWA +=
+        `Mohon info nomor rekening dan total ongkirnya. Terima kasih!`;
+
+
+      try {
+
+        // Mengirim pesanan ke Google Apps Script.
+        // Mode no-cors tidak dapat membaca respons server.
+        const request = fetch(API_URL, {
+
+          method: "POST",
+
+          mode: "no-cors",
+
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+
+          body: JSON.stringify(payload)
+
+        });
+
+
+        // Membuka WhatsApp Admin Zatria.
+        const whatsappURL =
+          `https://wa.me/${WA_ADMIN}?text=${encodeURIComponent(textWA)}`;
+
+        const whatsappWindow = window.open(
+          whatsappURL,
+          "_blank"
+        );
+
+
+        if (!whatsappWindow) {
+
+          alert(
+            "WhatsApp tidak terbuka otomatis. Izinkan pop-up browser."
+          );
+
+        }
+
+
+        // Menunggu request selesai dikirim.
+        await request;
+
+
+        cart = [];
+
+        updateCartUI();
+
+        document.getElementById("checkout-form").reset();
+
+        toggleCart();
+
+
+      } catch (error) {
+
+        console.error("Kesalahan checkout:", error);
+
+        alert(
+          "Terjadi kendala saat mengirim pesanan. Silakan coba kembali."
+        );
+
+      } finally {
+
+        button.innerText = "Beli Sekarang via WhatsApp 📲";
+
+        button.disabled = false;
+
+      }
+
+    }
+
+
+    // JALANKAN KATALOG
+    updateCartUI();
+
+    loadProducts();
+
+  </script>
+
+</body>
+</html>
+```
